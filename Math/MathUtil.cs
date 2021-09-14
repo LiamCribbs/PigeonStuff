@@ -148,6 +148,26 @@ namespace Pigeon.Math
         /// Very good approximation if we don't need exact decimals
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 NormalizedFast(this Vector3 v)
+        {
+            float mag = MathUtil.SqrtFast(v.x * v.x + v.y * v.y + v.z * v.z);
+            return mag == 0f ? Vector3.zero : v / mag;
+        }
+
+        /// <summary>
+        /// Within ~0.1 for low numbers, gets pretty far off for large numbers
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 NormalizedVeryFast(this Vector3 v)
+        {
+            float mag = MathUtil.SqrtVeryFast(v.x * v.x + v.y * v.y + v.z * v.z);
+            return mag == 0f ? Vector3.zero : v / mag;
+        }
+
+        /// <summary>
+        /// Very good approximation if we don't need exact decimals
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float MagFast(this Vector2 v)
         {
             return MathUtil.SqrtFast(v.x * v.x + v.y * v.y);
@@ -160,6 +180,26 @@ namespace Pigeon.Math
         public static float MagVeryFast(this Vector2 v)
         {
             return MathUtil.SqrtVeryFast(v.x * v.x + v.y * v.y);
+        }
+
+        /// <summary>
+        /// Very good approximation if we don't need exact decimals
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector2 NormalizedFast(this Vector2 v)
+        {
+            float mag = MathUtil.SqrtFast(v.x * v.x + v.y * v.y);
+            return mag == 0f ? Vector2.zero : v / mag;
+        }
+
+        /// <summary>
+        /// Within ~0.1 for low numbers, gets pretty far off for large numbers
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector2 NormalizedVeryFast(this Vector2 v)
+        {
+            float mag = MathUtil.SqrtVeryFast(v.x * v.x + v.y * v.y);
+            return mag == 0f ? Vector2.zero : v / mag;
         }
     }
 }
