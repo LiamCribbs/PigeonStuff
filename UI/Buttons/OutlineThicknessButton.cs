@@ -48,11 +48,6 @@ namespace Pigeon
             StartCoroutine(hoverCoroutine);
 
             OnHoverEnter?.Invoke();
-
-            if (playAudio)
-            {
-                GlobalAudio.instance.PlayHover();
-            }
         }
 
         public override void OnPointerExit(PointerEventData eventData)
@@ -90,11 +85,6 @@ namespace Pigeon
             StartCoroutine(hoverCoroutine);
 
             OnClickDown?.Invoke();
-
-            if (playAudio)
-            {
-                GlobalAudio.instance.PlayClick();
-            }
         }
 
         public override void OnPointerUp(PointerEventData eventData)

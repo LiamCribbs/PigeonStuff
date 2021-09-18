@@ -13,7 +13,7 @@ public class UICursor : MonoBehaviour
 
     public State state;
 
-    public float fallbackSensitivity = 0.7f;
+    public float sensitivity = 0.7f;
 
     public static GameObject prefab;
     public static EventSystem eventSystem;
@@ -22,8 +22,6 @@ public class UICursor : MonoBehaviour
 
     public Pigeon.Button rectButton;
     public GraphicRaycaster raycaster;
-    public PlayerInteract playerInteract;
-    bool useFullScreen;
 
     bool foundGraphic;
     IEventSystemHandler selectedGraphic;
@@ -67,90 +65,37 @@ public class UICursor : MonoBehaviour
         state = State.None;
 
         raycaster = canvas.GetComponent<GraphicRaycaster>();
-        this.useFullScreen = useFullScreen;
     }
 
     void Awake()
     {
-        //transform = GetComponent<RectTransform>();
-
         if (!eventSystem)
         {
             eventSystem = FindObjectOfType<EventSystem>();
         }
 
-        if (playerInteract)
-        {
-            playerInteract.input.controls.Menu.Move.Enable();
-            playerInteract.input.controls.Menu.Select.Enable();
-            playerInteract.input.controls.Menu.Cancel.Enable();
-        }
-        else
-        {
-            moveInput.action.Enable();
-            clickInput.action.Enable();
-            backInput.action.Enable();
-        }
+        moveInput.action.Enable();
+        clickInput.action.Enable();
+        backInput.action.Enable();
     }
 
     void OnDestroy()
     {
-        if (playerInteract)
-        {
-            playerInteract.input.controls.Menu.Move.Disable();
-            playerInteract.input.controls.Menu.Select.Disable();
-            playerInteract.input.controls.Menu.Cancel.Disable();
-        }
-        else
-        {
-            moveInput.action.Disable();
-            clickInput.action.Disable();
-            backInput.action.Disable();
-        }
+        moveInput.action.Disable();
+        clickInput.action.Disable();
+        backInput.action.Disable();
     }
 
     private void OnEnable()
     {
-        if (playerInteract)
-        {
-            //playerInteract.input.controls.Menu.Move.Enable();
-            //playerInteract.input.controls.Menu.Select.Enable();
-            //playerInteract.input.controls.Menu.Cancel.Enable();
-
-            playerInteract.input.controls.Menu.Select.started += OnClickDown;
-            playerInteract.input.controls.Menu.Select.canceled += OnClickUp;
-        }
-        else
-        {
-            //moveInput.action.Enable();
-            //clickInput.action.Enable();
-            //backInput.action.Enable();
-
-            clickInput.action.started += OnClickDown;
-            clickInput.action.canceled += OnClickUp;
-        }
+        clickInput.action.started += OnClickDown;
+        clickInput.action.canceled += OnClickUp;
     }
 
     void OnDisable()
     {
-        if (playerInteract)
-        {
-            //playerInteract.input.controls.Menu.Move.Disable();
-            //playerInteract.input.controls.Menu.Select.Disable();
-            //playerInteract.input.controls.Menu.Cancel.Disable();
-
-            playerInteract.input.controls.Menu.Select.started -= OnClickDown;
-            playerInteract.input.controls.Menu.Select.canceled -= OnClickUp;
-        }
-        else
-        {
-            //moveInput.action.Disable();
-            //clickInput.action.Disable();
-            //backInput.action.Disable();
-
-            clickInput.action.started -= OnClickDown;
-            clickInput.action.canceled -= OnClickUp;
-        }
+        clickInput.action.started -= OnClickDown;
+        clickInput.action.canceled -= OnClickUp;
 
         if (selectedGraphic != null)
         {
@@ -220,7 +165,7 @@ public class UICursor : MonoBehaviour
             selectedGraphic = null;
         }
 
-        Vector2 position = transform.anchoredPosition + (playerInteract ? playerInteract.input.controls.Menu.Move.ReadValue<Vector2>() * playerInteract.cursorSensitivity : moveInput.action.ReadValue<Vector2>() * fallbackSensitivity);
+        Vector2 position = transform.anchoredPosition + moveInput.action.ReadValue<Vector2>() * sensitivity;
 
         if (position.x < ScreenLeft)
         {
@@ -359,7 +304,7 @@ public class UICursor : MonoBehaviour
     {
         get
         {
-            return useFullScreen ? 0f : playerInteract.ScreenLeft;
+            return 0f;
         }
     }
 
@@ -367,7 +312,7 @@ public class UICursor : MonoBehaviour
     {
         get
         {
-            return useFullScreen ? PlayerInteract.ScreenWidth : playerInteract.ScreenRight;
+            return Screen.width;
         }
     }
 
@@ -375,7 +320,7 @@ public class UICursor : MonoBehaviour
     {
         get
         {
-            return useFullScreen ? 0f : playerInteract.ScreenBottom;
+            return 0f;
         }
     }
 
@@ -383,7 +328,7 @@ public class UICursor : MonoBehaviour
     {
         get
         {
-            return useFullScreen ? PlayerInteract.ScreenHeight : playerInteract.ScreenTop;
+            return Screen.height;
         }
     }
 }
