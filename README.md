@@ -1,7 +1,7 @@
 # Documentation for the Buttons
 
 ## Pigeon.Button
-If referencing the buttons in code, make sure you are `using Pigeon`
+When referencing the buttons in code, make sure you are `using Pigeon`
 
 * Fields
 	* `bool hovering`
