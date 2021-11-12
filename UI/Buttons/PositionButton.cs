@@ -27,7 +27,7 @@ namespace Pigeon
             defaultPosition = mainGraphic.localPosition;
         }
 
-        public virtual void SetDefaultOutlineThickness(Vector2 value)
+        public virtual void SetDefaultPosition(Vector2 value)
         {
             defaultPosition = value;
         }

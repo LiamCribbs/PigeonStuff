@@ -124,19 +124,5 @@ namespace Pigeon
                 yield return null;
             }
         }
-
-        public void Toggle()
-        {
-            if (clicking)
-            {
-                OnPointerUp(null);
-                OnPointerExit(null);
-            }
-            else
-            {
-                OnPointerEnter(null);
-                OnPointerDown(null);
-            }
-        }
     }
 }

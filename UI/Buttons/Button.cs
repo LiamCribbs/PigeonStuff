@@ -165,11 +165,25 @@ namespace Pigeon
             OnClickUp?.Invoke();
         }
 
-        public virtual void SetToNull(IEnumerator coroutine)
+        protected virtual void SetToNull(IEnumerator coroutine)
         {
             if (coroutine != null)
             {
                 StopCoroutine(coroutine);
+            }
+        }
+
+        public void Toggle()
+        {
+            if (clicking)
+            {
+                OnPointerUp(null);
+                OnPointerExit(null);
+            }
+            else
+            {
+                OnPointerEnter(null);
+                OnPointerDown(null);
             }
         }
     }
