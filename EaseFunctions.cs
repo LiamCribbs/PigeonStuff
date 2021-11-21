@@ -6,6 +6,11 @@ namespace Pigeon
 {
     public static class EaseFunctions
     {
+        // Easings reference: https://easings.net/
+        
+        /// <summary>
+        /// Delegate that takes in a float and returns a float
+        /// </summary>
         public delegate float EvaluateMode(float x);
 
         /// <summary>
