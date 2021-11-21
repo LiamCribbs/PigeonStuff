@@ -42,7 +42,7 @@ namespace Pigeon
 
             hovering = true;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimateThickness(hoverSize, hoverSpeed);
+            hoverCoroutine = AnimateThickness(hoverSize, hoverSpeed, easingFunctionHover);
             StartCoroutine(hoverCoroutine);
 
             OnHoverEnter?.Invoke();
@@ -63,7 +63,7 @@ namespace Pigeon
 
             hovering = false;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimateThickness(relative ? Vector2.zero : defaultSize, hoverSpeed);
+            hoverCoroutine = AnimateThickness(relative ? Vector2.zero : defaultSize, hoverSpeed, easingFunctionHover);
             StartCoroutine(hoverCoroutine);
 
             OnHoverExit?.Invoke();
@@ -78,7 +78,7 @@ namespace Pigeon
 
             clicking = true;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimateThickness(clickSize, clickSpeed);
+            hoverCoroutine = AnimateThickness(clickSize, clickSpeed, easingFunctionHover);
             StartCoroutine(hoverCoroutine);
 
             OnClickDown?.Invoke();
@@ -95,14 +95,14 @@ namespace Pigeon
             SetToNull(hoverCoroutine);
             if (hovering)
             {
-                hoverCoroutine = AnimateThickness(hoverSize, clickSpeed);
+                hoverCoroutine = AnimateThickness(hoverSize, clickSpeed, easingFunctionHover);
             }
             StartCoroutine(hoverCoroutine);
 
             OnClickUp?.Invoke();
         }
 
-        protected virtual IEnumerator AnimateThickness(Vector2 targetSize, float speed)
+        protected virtual IEnumerator AnimateThickness(Vector2 targetSize, float speed, EasingFunctions.EvaluateMode ease)
         {
             Vector2 initialSize = rectTransform.sizeDelta;
             if (relative)
@@ -120,7 +120,7 @@ namespace Pigeon
                     time = 1f;
                 }
 
-                rectTransform.sizeDelta = Vector2.LerpUnclamped(initialSize, targetSize, easingFunctionClick.Invoke(time));
+                rectTransform.sizeDelta = Vector2.LerpUnclamped(initialSize, targetSize, ease(time));
 
                 yield return null;
             }

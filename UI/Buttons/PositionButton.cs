@@ -41,7 +41,7 @@ namespace Pigeon
 
             hovering = true;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimatePosition(hoverPosition, hoverSpeed);
+            hoverCoroutine = AnimatePosition(hoverPosition, hoverSpeed, easingFunctionHover);
             StartCoroutine(hoverCoroutine);
 
             OnHoverEnter?.Invoke();
@@ -56,7 +56,7 @@ namespace Pigeon
 
             hovering = false;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimatePosition(Vector2.zero, hoverSpeed);
+            hoverCoroutine = AnimatePosition(Vector2.zero, hoverSpeed, easingFunctionHover);
             StartCoroutine(hoverCoroutine);
 
             OnHoverExit?.Invoke();
@@ -71,7 +71,7 @@ namespace Pigeon
 
             clicking = true;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimatePosition(clickPosition, clickSpeed);
+            hoverCoroutine = AnimatePosition(clickPosition, clickSpeed, easingFunctionClick);
             StartCoroutine(hoverCoroutine);
 
             OnClickDown?.Invoke();
@@ -88,14 +88,14 @@ namespace Pigeon
             SetToNull(hoverCoroutine);
             if (hovering)
             {
-                hoverCoroutine = AnimatePosition(hoverPosition, clickSpeed);
+                hoverCoroutine = AnimatePosition(hoverPosition, clickSpeed, easingFunctionClick);
             }
             StartCoroutine(hoverCoroutine);
 
             OnClickUp?.Invoke();
         }
 
-        IEnumerator AnimatePosition(Vector2 targetPosition, float speed)
+        IEnumerator AnimatePosition(Vector2 targetPosition, float speed, EasingFunctions.EvaluateMode ease)
         {
             Vector2 initialThickness = mainGraphic.localPosition;
             targetPosition += defaultPosition;
@@ -110,7 +110,7 @@ namespace Pigeon
                     time = 1f;
                 }
 
-                mainGraphic.localPosition = Vector2.LerpUnclamped(initialThickness, targetPosition, easingFunctionClick.Invoke(time));
+                mainGraphic.localPosition = Vector2.LerpUnclamped(initialThickness, targetPosition, ease(time));
 
                 yield return null;
             }

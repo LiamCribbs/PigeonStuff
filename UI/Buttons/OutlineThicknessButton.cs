@@ -12,9 +12,6 @@ namespace Pigeon
         public float hoverOutlineThickness;
         public float clickOutlineThickness;
 
-        [Space(10)]
-        public bool playAudio = true;
-
         protected void Reset()
         {
             if (!mainGraphic)
@@ -44,7 +41,7 @@ namespace Pigeon
 
             hovering = true;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimateThickness(hoverOutlineThickness, hoverSpeed);
+            hoverCoroutine = AnimateThickness(hoverOutlineThickness, hoverSpeed, easingFunctionHover);
             StartCoroutine(hoverCoroutine);
 
             OnHoverEnter?.Invoke();
@@ -65,7 +62,7 @@ namespace Pigeon
 
             hovering = false;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimateThickness(defaultOutlineThickness, hoverSpeed);
+            hoverCoroutine = AnimateThickness(defaultOutlineThickness, hoverSpeed, easingFunctionHover);
             StartCoroutine(hoverCoroutine);
 
             OnHoverExit?.Invoke();
@@ -81,7 +78,7 @@ namespace Pigeon
 
             clicking = true;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimateThickness(clickOutlineThickness, clickSpeed);
+            hoverCoroutine = AnimateThickness(clickOutlineThickness, clickSpeed, easingFunctionClick);
             StartCoroutine(hoverCoroutine);
 
             OnClickDown?.Invoke();
@@ -98,14 +95,14 @@ namespace Pigeon
             SetToNull(hoverCoroutine);
             if (hovering)
             {
-                hoverCoroutine = AnimateThickness(hoverOutlineThickness, clickSpeed);
+                hoverCoroutine = AnimateThickness(hoverOutlineThickness, clickSpeed, easingFunctionClick);
             }
             StartCoroutine(hoverCoroutine);
 
             OnClickUp?.Invoke();
         }
 
-        IEnumerator AnimateThickness(float targetThickness, float speed)
+        IEnumerator AnimateThickness(float targetThickness, float speed, EasingFunctions.EvaluateMode ease)
         {
             float initialThickness = mainGraphic.GetValue();
 
@@ -119,7 +116,7 @@ namespace Pigeon
                     time = 1f;
                 }
 
-                mainGraphic.SetValue(Mathf.LerpUnclamped(initialThickness, targetThickness, easingFunctionClick.Invoke(time)));
+                mainGraphic.SetValue(Mathf.LerpUnclamped(initialThickness, targetThickness, ease(time)));
 
                 yield return null;
             }

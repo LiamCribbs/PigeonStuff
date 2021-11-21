@@ -1,36 +1,28 @@
-﻿using System.Collections;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace Pigeon
 {
-    public class ColorButton : Button
+    public class AlphaGroupButton : Button
     {
         [Space(10f)]
-        public Graphic mainGraphic;
-        Color defaultColor;
-        public Color hoverColor;
-        public Color clickColor;
-
-        protected void Reset()
-        {
-            if (!mainGraphic)
-            {
-                mainGraphic = GetComponent<Graphic>();
-            }
-        }
+        public CanvasGroup group;
+        float defaultAlpha;
+        public float hoverAlpha;
+        public float clickAlpha;
 
         public override void Awake()
         {
             base.Awake();
 
-            defaultColor = mainGraphic.color;
+            defaultAlpha = group.alpha;
         }
 
-        public virtual void SetDefaultColor(Color value)
+        public virtual void SetDefaultAlpha(float value)
         {
-            defaultColor = value;
+            defaultAlpha = value;
         }
 
         public override void OnPointerEnter(PointerEventData eventData)
@@ -42,7 +34,7 @@ namespace Pigeon
 
             hovering = true;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimateThickness(hoverColor, hoverSpeed, easingFunctionHover);
+            hoverCoroutine = AnimateThickness(hoverAlpha, hoverSpeed, easingFunctionHover);
             StartCoroutine(hoverCoroutine);
 
             OnHoverEnter?.Invoke();
@@ -63,7 +55,7 @@ namespace Pigeon
 
             hovering = false;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimateThickness(defaultColor, hoverSpeed, easingFunctionHover);
+            hoverCoroutine = AnimateThickness(defaultAlpha, hoverSpeed, easingFunctionHover);
             StartCoroutine(hoverCoroutine);
 
             OnHoverExit?.Invoke();
@@ -79,7 +71,7 @@ namespace Pigeon
 
             clicking = true;
             SetToNull(hoverCoroutine);
-            hoverCoroutine = AnimateThickness(clickColor, clickSpeed, easingFunctionClick);
+            hoverCoroutine = AnimateThickness(clickAlpha, clickSpeed, easingFunctionClick);
             StartCoroutine(hoverCoroutine);
 
             OnClickDown?.Invoke();
@@ -96,16 +88,16 @@ namespace Pigeon
             SetToNull(hoverCoroutine);
             if (hovering)
             {
-                hoverCoroutine = AnimateThickness(hoverColor, clickSpeed, easingFunctionClick);
+                hoverCoroutine = AnimateThickness(hoverAlpha, clickSpeed, easingFunctionClick);
             }
             StartCoroutine(hoverCoroutine);
 
             OnClickUp?.Invoke();
         }
 
-        IEnumerator AnimateThickness(Color targetColor, float speed, EasingFunctions.EvaluateMode ease)
+        IEnumerator AnimateThickness(float targetThickness, float speed, EasingFunctions.EvaluateMode ease)
         {
-            Color initialColor = mainGraphic.color;
+            float initialThickness = group.alpha;
 
             float time = 0f;
 
@@ -117,7 +109,7 @@ namespace Pigeon
                     time = 1f;
                 }
 
-                mainGraphic.color = Color.LerpUnclamped(initialColor, targetColor, ease(time));
+                group.alpha = Mathf.LerpUnclamped(initialThickness, targetThickness, ease(time));
 
                 yield return null;
             }
