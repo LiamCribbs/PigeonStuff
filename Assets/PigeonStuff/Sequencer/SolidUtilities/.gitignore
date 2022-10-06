@@ -1,0 +1,54 @@
+# Derived From:
+# http://kleber-swf.com/the-definitive-gitignore-for-unity-projects/
+
+# ======= #
+# Private #
+# ======= #
+_private/
+Release/
+/Help/
+*.shfbproj_*
+
+/Assets/Zenject/Extras
+
+# =============== #
+# Unity generated #
+# =============== #
+Temp/
+Obj/
+UnityGenerated/
+Library/
+
+# ============ #
+# OS generated #
+# ============ #
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# Common IntelliJ Platform excludes
+
+# Jetbrain Rider Cache
+**/.idea/*
+
+*.suo
+*.user
+.vs/
+[Bb]in/
+[Oo]bj/
+_UpgradeReport_Files/
+[Pp]ackages/
+
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# The file being generated in root directory instead of obj/debug https://github.com/dotnet/roslyn/issues/48430
+*.GeneratedMSBuildEditorConfig.editorconfig
+
+*.csproj.DotSettings
