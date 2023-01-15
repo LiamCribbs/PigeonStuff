@@ -42,18 +42,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Fire",
+                    "name": "Sprint",
                     "type": "Button",
-                    "id": "b337c8b6-1849-4e45-b5cd-2b44962db5b3",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "Reload",
-                    "type": "Button",
-                    "id": "4ec1d133-542d-4478-b010-36ff74387899",
+                    "id": "b31a3e7e-69c6-4d51-ac17-7e537778b445",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -195,30 +186,8 @@
                 },
                 {
                     "name": "",
-                    "id": "bc4704f8-7316-4140-844d-d4b4c5d06fe3",
-                    "path": "<Mouse>/backButton",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Slide",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "0e1f1a18-1da2-4f26-8438-70bd3c654b49",
                     "path": "<Keyboard>/c",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Slide",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "fa897eab-82cb-42fc-b65f-1d5cf465f68c",
-                    "path": "<Keyboard>/leftShift",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -239,45 +208,12 @@
                 },
                 {
                     "name": "",
-                    "id": "0ec5d6f0-3b61-481a-b747-59793be83401",
-                    "path": "<Mouse>/leftButton",
+                    "id": "5f979785-73a7-45c1-ab1d-ee60a2e6449c",
+                    "path": "<Keyboard>/leftShift",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Fire",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "172be161-2690-4be2-9964-82f2c63cb568",
-                    "path": "<Gamepad>/rightTrigger",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Fire",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "54adc5ec-0076-4b5d-bcee-cc06a6d34165",
-                    "path": "<Keyboard>/r",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Reload",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "e61a8250-8ce2-4c07-be9d-6b1c3fd156d5",
-                    "path": "<Gamepad>/buttonWest",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Reload",
+                    "action": "Sprint",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

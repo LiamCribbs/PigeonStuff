@@ -1,6 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Pigeon.Movement
 {
@@ -9,85 +11,77 @@ namespace Pigeon.Movement
         [SerializeField] PlayerMovement playerMovement;
         [SerializeField] PlayerLook playerLook;
 
-        [Space(20)]
-        [SerializeField] float speedMultiplier;
-        [SerializeField] float handSpeedMultiplier = 1f;
-        [SerializeField] float fadeInSpeed;
-        [SerializeField] float fadeOutSpeed;
-        [SerializeField] Pigeon.Math.EaseFunction fadeCurve;
+        [SerializeField, Tooltip("Headbob speed multiplier")] float speedMultiplier;
+        [SerializeField, Tooltip("Running animation speed multiplier, applied on top of speedMultiplier")] float handSpeedMultiplier = 1f;
+        [SerializeField, Tooltip("How fast headbob fades in when starting to move")] float fadeInSpeed;
+        [SerializeField, Tooltip("How fast headbob fades out when no longer moving")] float fadeOutSpeed;
+        [SerializeField, Tooltip("Curve for headbob intensity fading in and out")] Pigeon.Math.EaseFunction fadeCurve;
         Coroutine fadeCoroutine;
 
         float intensityMultiplier;
         float addIntensity;
 
-        [Space(10)]
-        [SerializeField] Vector3 runningHeadPosition;
-        [SerializeField] Vector3 runningHeadRotation;
+        [SerializeField, Tooltip("Target camera position offset when running." +
+            "\n\nLowering the head slightly can simulate a body leaning forward while sprinting.")] Vector3 runningHeadPosition;
+        [SerializeField, Tooltip("Target camera rotation offset when running")] Vector3 runningHeadRotation;
 
-        [Space(10)]
-        [SerializeField] float turnTiltIntensity;
-        [SerializeField] float turnTiltSpeed;
-        [SerializeField] float maxTiltMoveSpeed;
-        [SerializeField] AnimationCurve moveSpeedTiltCurve;
-        [SerializeField] float maxTilt;
-        float currentTilt;
-
+        /// <summary>
+        /// Is headbob currently being applied?
+        /// </summary>
         public bool Active { get; private set; }
 
-        [Space(20)]
-        [SerializeField] Range xPosRange;
-        [SerializeField] Range yPosRange;
+        [SerializeField, Min(0f), Tooltip("Headbob intensity multiplier")] float headbobIntensity = 1f;
 
-        [Space(20)]
-        [SerializeField] Range xRotRange;
-        [SerializeField] Range yRotRange;
-        [SerializeField] Range zRotRange;
+        [SerializeField, Tooltip("Positional headbob along the x axis")] Range xPosRange;
+        [SerializeField, Tooltip("Positional headbob along the y axis")] Range yPosRange;
 
-        [Space(20)]
-        [SerializeField] SpringSettings jumpSpring;
-        [SerializeField] SpringSettings landSpring;
-        [SerializeField] Vector2 landSpringIntensityBounds;
-        [SerializeField] Vector2 landSpringSpeedBounds;
-        [SerializeField] SpringSettings landHeadbobIntensity;
-        [SerializeField] float rollSpeed = 1f;
+        [SerializeField, Tooltip("Positional headbob along the x axis")] Range xRotRange;
+        [SerializeField, Tooltip("Positional headbob along the y axis")] Range yRotRange;
+        [SerializeField, Tooltip("Positional headbob along the z axis")] Range zRotRange;
 
-        [Space(10)]
-        [SerializeField] AnimationCurve rollCurve;
-        [SerializeField] AnimationCurve rollPositionCurve;
-        [SerializeField] Vector3 rollPosition;
-        [SerializeField] float rollZRotation;
+        [SerializeField, Tooltip("X rotation animation when jumping")] SpringSettings jumpSpring;
+        [SerializeField, Tooltip("X rotation animation when landing")] SpringSettings landSpring;
+        [SerializeField, Tooltip("Minimum and maximum intensity multipliers from y speed when landing")] Vector2 landSpringIntensityBounds;
+        [SerializeField, Tooltip("Minimum and maximum speed multipliers from y speed when landing")] Vector2 landSpringSpeedBounds;
+        [SerializeField, Tooltip("Temporary headbob intensity added when landing")] SpringSettings landHeadbobIntensity;
 
-        [Space(10)]
-        [SerializeField] float landingShockXAngle;
-        [SerializeField] AnimationCurve landingShockXAngleCurve;
-        [SerializeField] SpringSettings landingShockZRotationSpring;
-        [SerializeField] SpringSettings3D landingShockPositionSpring;
+        [SerializeField, Tooltip("Target x angle during a landing shock")] float landingShockXAngle;
+        [SerializeField, Tooltip("How the camera rotates over the course of a landing shock")] AnimationCurve landingShockXAngleCurve;
+        [SerializeField, Tooltip("Z rotation animation during a landing shock")] SpringSettings landingShockZRotationSpring;
+        [SerializeField, Tooltip("Camera position animation during a landing shock")] SpringSettings3D landingShockPositionSpring;
 
-        [Space(20)]
-        [SerializeField] SpringSettings startSlideSpring;
-        [SerializeField] SpringSettings endSlideSpring;
-        [SerializeField][Range(0f, 1f)] float endSlideTime;
-        [SerializeField] float slideShakeIntensity;
-        [SerializeField] AnimationCurve slideShakeCurve;
+        [SerializeField, Tooltip("How fast the camera moves and rotates toward its target when starting a slide")] float startSlideSpeed;
+        [SerializeField, Tooltip("How fast the camera moves and rotates back to normal when ending a slide")] float endSlideSpeed;
+        [SerializeField, Tooltip("Camera position offset when sliding")] Vector3 slidePosition;
+        [SerializeField, Tooltip("How the camera moves to its offset when starting a slide")] AnimationCurve startSlidePositionCurve;
+        [SerializeField, Tooltip("How the camera moves back to normal when ending a slide")] AnimationCurve endSlidePositionCurve;
+        [SerializeField, Tooltip("Camera rotation offset when sliding")] Vector3 slideRotation;
+        [SerializeField, Tooltip("How the camera rotates to its offset when starting a slide")] AnimationCurve startSlideRotationCurve;
+        [SerializeField, Tooltip("How the camera rotates back to normal when ending a slide")] AnimationCurve endSlideRotationCurve;
+        Coroutine slideCoroutine;
+        Vector3 slideAddPosition;
+        Vector3 slideAddRotation;
 
-        [Space(20)]
-        [SerializeField] SpringSettings wallBounceSpring;
+        [SerializeField, Tooltip("How fast the camera rolls if rolling is enabled on PlayerMovemet")] float rollSpeed = 1f;
+        [SerializeField, Tooltip("How the camera rotates over the course of a roll")] AnimationCurve rollCurve;
+        [SerializeField, Tooltip("How the camera moves over the course of a roll")] AnimationCurve rollPositionCurve;
+        [SerializeField, Tooltip("Target camera position during a roll")] Vector3 rollPosition;
+        [SerializeField, Tooltip("Target camera z tilt during a roll")] float rollZRotation;
 
-        [Space(20)]
-        [SerializeField] Vector3 wallrunAngle;
+        [SerializeField, Tooltip("Camera angle offset when wallrunning")] Vector3 wallrunAngle;
         Vector3 currentWallrunAngle;
-        [SerializeField] float wallrunAngleInitialSpeed;
-        [SerializeField] AnimationCurve wallrunAngleInitialCurve;
-        [SerializeField] AnimationCurve wallrunAngleDecayCurve;
-        [SerializeField] float wallrunAngleEndSpeed;
-        [SerializeField] AnimationCurve wallrunAngleEndCurve;
+        [SerializeField, Tooltip("How fast the camera rotates to wallrunAngle when beginning a wallrun")] float wallrunAngleInitialSpeed;
+        [SerializeField, Tooltip("How the camera rotates toward wallrunAngle when beginning a wallrun")] AnimationCurve wallrunAngleInitialCurve;
+        [SerializeField, Tooltip("How the camera rotates back to normal over the course of a wallrun")] AnimationCurve wallrunAngleDecayCurve;
+        [SerializeField, Tooltip("How fast the camera rotates back to normal when ending a wallrun")] float wallrunAngleEndSpeed;
+        [SerializeField, Tooltip("How the camera rotates back to normal when ending an wallrun")] AnimationCurve wallrunAngleEndCurve;
         Coroutine wallrunTiltCoroutine;
 
-        [SerializeField] Range wallrunningXPosRange;
-        [SerializeField] Range wallrunningYPosRange;
-        [SerializeField] Range wallrunningZRotRange;
+        [SerializeField, Tooltip("Positional headbob along the x axis when wallrunning")] Range wallrunningXPosRange;
+        [SerializeField, Tooltip("Positional headbob along the y axis when wallrunning")] Range wallrunningYPosRange;
+        [SerializeField, Tooltip("Rotational headbob along the z axis when wallrunning")] Range wallrunningZRotRange;
         float wallrunningHeadbobInterpolation;
-        [SerializeField] float wallrunningHeadbobInterpolationSpeed;
+        [SerializeField, Tooltip("How fast headbob blends to the wallrunning headbob ranges when wallrunning")] float wallrunningHeadbobInterpolationSpeed;
         Coroutine wallrunningHeadbobInterpolationCoroutine;
 
         public event System.Action OnStep;
@@ -152,8 +146,7 @@ namespace Pigeon.Movement
             playerMovement.OnJump += OnJump;
             playerMovement.OnLanded += OnLand;
             playerMovement.OnStartSlide += OnStartSlide;
-            playerMovement.OnSlide += OnSlide;
-            playerMovement.OnWallBounce += OnWallBounce;
+            playerMovement.OnEndSlide += OnEndSlide;
             playerMovement.OnStartWallrun += OnStartWallrun;
             playerMovement.OnEndWallrun += OnEndWallrun;
 
@@ -165,8 +158,7 @@ namespace Pigeon.Movement
             playerMovement.OnJump -= OnJump;
             playerMovement.OnLanded -= OnLand;
             playerMovement.OnStartSlide -= OnStartSlide;
-            playerMovement.OnSlide -= OnSlide;
-            playerMovement.OnWallBounce -= OnWallBounce;
+            playerMovement.OnEndSlide -= OnEndSlide;
             playerMovement.OnStartWallrun -= OnStartWallrun;
             playerMovement.OnEndWallrun -= OnEndWallrun;
         }
@@ -213,7 +205,7 @@ namespace Pigeon.Movement
                 };
 
                 // Apply headbob for this frame
-                float intensity = intensityMultiplier + addIntensity * intensityMultiplier;
+                float intensity = ((intensityMultiplier + addIntensity * intensityMultiplier) * playerMovement.Speed / playerMovement.DefaultMoveSpeed) * headbobIntensity;
                 playerLook.AddPosition(intensity * (pos + runningHeadPosition));
                 playerLook.AddRotation(intensity * (rot + runningHeadRotation));
                 addIntensity = 0f;
@@ -225,24 +217,6 @@ namespace Pigeon.Movement
                 }
                 lastStepT = stepT;
             }
-
-            //float tiltMultiplier = Mathf.Min(1f, moveSpeedTiltCurve.Evaluate(playerMovement.Speed / maxTiltMoveSpeed));
-            //float newTilt = Mathf.Lerp(currentTilt, playerMovement.RotationDelta * turnTiltIntensity * tiltMultiplier, turnTiltSpeed * Time.deltaTime);
-            //float absTilt = Mathf.Abs(newTilt);
-            //if (absTilt < 0.05f)
-            //{
-            //    if (absTilt < Mathf.Abs(currentTilt))
-            //    {
-            //        newTilt = 0f;
-            //    }
-            //}
-            //else
-            //{
-            //    newTilt = Mathf.Clamp(newTilt, -maxTilt, maxTilt);
-            //}
-
-            //currentTilt = newTilt;
-            //playerLook.AddRotation(new Vector3(0f, 0f, currentTilt));
         }
 
         void Activate()
@@ -330,11 +304,14 @@ namespace Pigeon.Movement
 
         void OnLand()
         {
-            if (Time.time - playerMovement.SlideStartTime <= playerMovement.RollInputInterval && playerMovement.StartSlide())
+            if (playerMovement.Sliding && !playerMovement.HasTouchedGroundDuringSlide)
             {
-                StartCoroutine(RollCoroutine(rollSpeed, rollCurve, rollPositionCurve, rollPosition, rollZRotation));
+                if (playerMovement.EnableRoll)
+                {
+                    StartCoroutine(RollCoroutine(rollSpeed, rollCurve, rollPositionCurve, rollPosition, rollZRotation));
+                }
             }
-            else if (playerMovement.YSpeed < playerMovement.LandingShockSpeedTheshold)
+            else if (playerMovement.EnableLandingShock && playerMovement.YSpeed < playerMovement.LandingShockSpeedTheshold)
             {
                 PlayLandingShock();
             }
@@ -348,24 +325,80 @@ namespace Pigeon.Movement
 
         void OnStartSlide()
         {
-            Spring(startSlideSpring);
-        }
-
-        void OnSlide(float t, float prevT)
-        {
-            // Play endSlideSpring at endSlideTime% of the way through the slide
-            if (t >= endSlideTime && prevT < endSlideTime)
+            if (slideCoroutine != null)
             {
-                Spring(endSlideSpring);
+                StopCoroutine(slideCoroutine);
             }
 
-            //playerLook.ShakeTranslateTemp(slideShakeIntensity * slideShakeCurve.Evaluate(t) * Time.deltaTime);
-            ///playerLook.AddPosition(Random.insideUnitCircle * (slideShakeCurve.Evaluate(t) * Time.deltaTime));
+            slideCoroutine = StartCoroutine(StartSlideCoroutine());
         }
 
-        void OnWallBounce()
+        void OnEndSlide()
         {
-            Spring(wallBounceSpring);
+            if (slideCoroutine != null)
+            {
+                StopCoroutine(slideCoroutine);
+            }
+
+            slideCoroutine = StartCoroutine(EndSlideCoroutine());
+        }
+
+        IEnumerator StartSlideCoroutine()
+        {
+            Vector3 initialAddPos = slideAddPosition;
+            Vector3 initialAddRot = slideAddRotation;
+            float time = 0f;
+
+            while (time < 1f)
+            {
+                time += startSlideSpeed * Time.deltaTime;
+                if (time > 1f)
+                {
+                    time = 1f;
+                }
+
+                slideAddPosition = Vector3.LerpUnclamped(initialAddPos, slidePosition, startSlidePositionCurve.Evaluate(time));
+                slideAddRotation = Vector3.LerpUnclamped(initialAddRot, slideRotation, startSlideRotationCurve.Evaluate(time));
+                playerLook.AddPosition(slideAddPosition);
+                playerLook.AddRotation(slideAddRotation);
+
+                yield return null;
+            }
+
+            while (true)
+            {
+                playerLook.AddPosition(slideAddPosition);
+                playerLook.AddRotation(slideAddRotation);
+
+                yield return null;
+            }
+
+            //slideCoroutine = null;
+        }
+
+        IEnumerator EndSlideCoroutine()
+        {
+            Vector3 initialAddPos = slideAddPosition;
+            Vector3 initialAddRot = slideAddRotation;
+            float time = 0f;
+
+            while (time < 1f)
+            {
+                time += endSlideSpeed * Time.deltaTime;
+                if (time > 1f)
+                {
+                    time = 1f;
+                }
+
+                slideAddPosition = Vector3.LerpUnclamped(initialAddPos, Vector3.zero, endSlidePositionCurve.Evaluate(time));
+                slideAddRotation = Vector3.LerpUnclamped(initialAddRot, Vector3.zero, endSlideRotationCurve.Evaluate(time));
+                playerLook.AddPosition(slideAddPosition);
+                playerLook.AddRotation(slideAddRotation);
+
+                yield return null;
+            }
+
+            slideCoroutine = null;
         }
 
         /// <summary>
@@ -504,9 +537,6 @@ namespace Pigeon.Movement
             playerLook.RotationLocksY++;
             playerMovement.MovementControlLocks++;
 
-            //Vector3 initialAngle = playerLook.transform.localEulerAngles;
-            //float targetAngle = 360f + Mathf.DeltaAngle(initialAngle.x + 360f, 0f);
-
             float time = 0f;
 
             while (time < 1f)
@@ -528,8 +558,16 @@ namespace Pigeon.Movement
             playerMovement.MovementControlLocks--;
         }
 
+        /// <summary>
+        /// Plays landing shock spring and locks movement and rotation until it's done
+        /// </summary>
         public void PlayLandingShock()
         {
+            if (!playerMovement.EnableLandingShock)
+            {
+                return;
+            }
+
             StartCoroutine(LandingShockCoroutine(landingShockXAngle, landingShockXAngleCurve, landingShockZRotationSpring, landingShockPositionSpring));
         }
 
@@ -661,5 +699,167 @@ namespace Pigeon.Movement
 
             wallrunningHeadbobInterpolationCoroutine = null;
         }
+
+#if UNITY_EDITOR
+        [CustomEditor(typeof(Headbob))]
+        class HeadbobEditor : Editor
+        {
+            Headbob script;
+
+            static bool headbobFoldout;
+            static bool jumpFoldout;
+            static bool slideFoldout;
+            static bool wallrunFoldout;
+
+            void OnEnable()
+            {
+                script = (Headbob)target;
+            }
+
+            public override void OnInspectorGUI()
+            {
+                serializedObject.Update();
+
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.playerMovement)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.playerLook)));
+
+                EditorGUILayout.Space(20);
+
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.speedMultiplier)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.handSpeedMultiplier)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.fadeInSpeed)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.fadeOutSpeed)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.fadeCurve)));
+
+                EditorGUILayout.Space(10);
+
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.runningHeadPosition)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.runningHeadRotation)));
+
+                EditorGUILayout.Space(10);
+
+                headbobFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(headbobFoldout, "Headbob");
+                if (headbobFoldout)
+                {
+                    EditorGUI.indentLevel++;
+
+                    EditorGUILayout.HelpBox("Headbob ranges interpolate between valueA and valueB over a duration, using an easing curve.", MessageType.Info);
+
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.headbobIntensity)));
+
+                    EditorGUILayout.Space(10);
+
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.xPosRange)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.yPosRange)));
+
+                    EditorGUILayout.Space(10);
+
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.xRotRange)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.yRotRange)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.zRotRange)));
+
+                    EditorGUI.indentLevel--;
+                    EditorGUILayout.Space(10);
+                }
+                EditorGUILayout.EndFoldoutHeaderGroup();
+
+                EditorGUILayout.Space(10);
+
+                jumpFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(jumpFoldout, "Jump");
+                if (jumpFoldout)
+                {
+                    EditorGUI.indentLevel++;
+
+                    EditorGUILayout.HelpBox("Springs animate the camera's rotation or position over time, and should always return to 0 at the end.", MessageType.Info);
+
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.jumpSpring)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.landSpring)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.landSpringIntensityBounds)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.landSpringSpeedBounds)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.landHeadbobIntensity)));
+
+                    if (script.playerMovement.EnableLandingShock)
+                    {
+                        EditorGUILayout.Space(10);
+                        EditorGUILayout.LabelField("Landing Shock", EditorStyles.boldLabel);
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.landingShockXAngle)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.landingShockXAngleCurve)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.landingShockZRotationSpring)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.landingShockPositionSpring)));
+                    }
+
+                    EditorGUI.indentLevel--;
+                    EditorGUILayout.Space(10);
+                }
+                EditorGUILayout.EndFoldoutHeaderGroup();
+
+                if (script.playerMovement.EnableSlide)
+                {
+                    EditorGUILayout.Space(10);
+
+                    slideFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(slideFoldout, "Sliding");
+                    if (slideFoldout)
+                    {
+                        EditorGUI.indentLevel++;
+
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.startSlideSpeed)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.endSlideSpeed)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.slidePosition)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.startSlidePositionCurve)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.endSlidePositionCurve)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.slideRotation)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.startSlideRotationCurve)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.endSlideRotationCurve)));
+
+                        if (script.playerMovement.EnableRoll)
+                        {
+                            EditorGUILayout.Space(10);
+                            EditorGUILayout.LabelField("Roll", EditorStyles.boldLabel);
+                            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.rollSpeed)));
+                            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.rollCurve)));
+                            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.rollPositionCurve)));
+                            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.rollPosition)));
+                            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.rollZRotation)));
+                        }
+
+                        EditorGUI.indentLevel--;
+                        EditorGUILayout.Space(10);
+                    }
+                    EditorGUILayout.EndFoldoutHeaderGroup();
+                }
+
+                if (script.playerMovement.EnableWallrun)
+                {
+                    EditorGUILayout.Space(10);
+
+                    wallrunFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(wallrunFoldout, "Wallrun");
+                    if (wallrunFoldout)
+                    {
+                        EditorGUI.indentLevel++;
+
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunAngle)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunAngleInitialSpeed)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunAngleInitialCurve)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunAngleDecayCurve)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunAngleEndSpeed)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunAngleEndCurve)));
+
+                        EditorGUILayout.Space(10);
+                        EditorGUILayout.LabelField("Wallrun Headbob", EditorStyles.boldLabel);
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunningXPosRange)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunningYPosRange)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunningZRotRange)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunningHeadbobInterpolationSpeed)));
+
+                        EditorGUI.indentLevel--;
+                        EditorGUILayout.Space(10);
+                    }
+                    EditorGUILayout.EndFoldoutHeaderGroup();
+                }
+
+                serializedObject.ApplyModifiedProperties();
+            }
+        }
+#endif
     }
 }

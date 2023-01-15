@@ -6,14 +6,10 @@ namespace Pigeon.Movement
 {
     public class PlayerInput : MonoBehaviour
     {
-        public static PlayerInput Instance { get; private set; }
-
         public PlayerControls Controls { get; private set; }
 
         void Awake()
         {
-            Instance = this;
-
             Controls = new PlayerControls();
             Controls.Enable();
         }

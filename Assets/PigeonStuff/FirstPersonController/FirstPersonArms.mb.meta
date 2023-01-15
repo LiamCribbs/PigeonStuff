@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 34f5a00d201b7d2449dae03335d5b250
+guid: e43ce7f15743dab4c8688f2a67438dec
 ModelImporter:
   serializedVersion: 21300
   internalIDToNameTable:
@@ -18,7 +18,67 @@ ModelImporter:
   - first:
       74: -1406342054623165098
     second: Clamber
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: SightColor
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: basicRig_Skin
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: basicRig_Skin.001
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: lambert1
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: lambert2
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: lambert5
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_Arms
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_Joints
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_Weapons
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mat_WeaponsDetails
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: phongBrass
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: rampShader1
+    second: {fileID: 2100000, guid: d125039956b1bb944a38a24ca1e88778, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
