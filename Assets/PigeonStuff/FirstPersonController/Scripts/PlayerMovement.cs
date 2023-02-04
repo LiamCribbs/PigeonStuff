@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Pigeon.Math;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -95,6 +96,7 @@ namespace Pigeon.Movement
         bool wantsToJump;
         [SerializeField, Range(0f, 1f), Tooltip("Our current speed is multiplied by this when jumping")] float speedLostOnJump = 1f;
         [SerializeField, Range(0f, 1f), Tooltip("Our current speed is multiplied by this when landing")] float speedLostOnLanding = 1f;
+        [SerializeField, Tooltip("Fall velocity must be lower than this to trigger OnLanded, which includes the land camera spring and speedLostOnLanding")] float velocityThresholdForLandEffects = -5f;
         [SerializeField, Tooltip("Enter a temporary shock state when landing with a y velocity greater than this value")] float landingShockSpeedThreshold = 100f;
 
         public float LandingShockSpeedTheshold => landingShockSpeedThreshold;
@@ -124,6 +126,7 @@ namespace Pigeon.Movement
             "\n\nThis value is used to check for ground while we're airborne. " +
             "It should be kept small so that we don't immediately detect ground when jumping on a slope.")]
         Vector3 airborneGroundCheckExtents = new Vector3(0.01f, 0.18f, 0.01f);
+        [SerializeField, Range(0f, 1f), Tooltip("The normal of the surface we're standing on must be >= this to count as ground")] float groundUpDirectionThreshold = 0.7f;
         [SerializeField, Min(0f), Tooltip("Downward force applied when moving along a sloped surface." +
             "\n\nThis helps keep us from flying off slopes when running downhill.")] float downwardForceAlongSlope = 8f;
         float halfHeight;
@@ -165,7 +168,7 @@ namespace Pigeon.Movement
         [SerializeField, Range(0f, 1f), Tooltip("Multiplier to left/right input while sliding")] float slideStrafeMultiplier = 0.8f;
         [SerializeField, Range(0f, 1f), Tooltip("How much control do we have over our movement direction while sliding?")] float slideInputControl = 0.3f;
         [SerializeField, Min(0f), Tooltip("Collider height while sliding.\n\nShrink the collider to allow the player to slide through shorter gaps.")] float slideColliderHeight = 0.75f;
-        
+
         /// <summary>
         /// Time at which the last slide was started
         /// </summary>
@@ -216,7 +219,8 @@ namespace Pigeon.Movement
             "\n\nThe camera's rotation is pushed toward this angle while wallrunning." +
             "\n\n0 is 90 degrees away from the wall. 1 is 180 degreees away from the wall")] float targetLookAngleWhileWallrunning = 0.25f;
         [SerializeField, Min(0f), Tooltip("How fast do we rotate toward targetLookAngleWhileWallrunning?")] float wallrunLookAwayFromWallSpeed = 1f;
-        
+
+        [SerializeField, Min(0f), Tooltip("Minimum duration we have to be airborne before being able to wallrun")] float minTimeInAirBeforeWallrun = 0.1f;
         [SerializeField, Min(0f), Tooltip("Minimum time before we can wallrun on our last touched wall again." +
             "\n\nThis stops the player from jumping off a wall and immediately wallrunning on it again.")] float wallrunWallDisableCooldown = 2f;
         float wallrunStartTime;
@@ -255,6 +259,11 @@ namespace Pigeon.Movement
         /// Are we currently touching the ground?
         /// </summary>
         public bool Grounded { get; private set; }
+
+        /// <summary>
+        /// Set to Time.time whenever we are grounded
+        /// </summary>
+        public float LastGroundedTime { get; private set; }
 
         /// <summary>
         /// Are we currently sliding?
@@ -404,6 +413,7 @@ namespace Pigeon.Movement
             }
             OnEnteredGround += EnableAnimatorGrounded;
             OnEnteredGround += ClearDisabledWallrunColliders;
+            OnLanded += EnableAnimatorLanded;
             OnLeftGround += DisableAnimatorGrounded;
             OnStartSlide += EnableAnimatorSlide;
             OnEndSlide += DisableAnimatorSlide;
@@ -425,6 +435,7 @@ namespace Pigeon.Movement
             }
             OnEnteredGround -= EnableAnimatorGrounded;
             OnEnteredGround -= ClearDisabledWallrunColliders;
+            OnLanded -= EnableAnimatorLanded;
             OnLeftGround -= DisableAnimatorGrounded;
             OnStartSlide -= EnableAnimatorSlide;
             OnEndSlide -= DisableAnimatorSlide;
@@ -757,22 +768,47 @@ Run:
             }
         }
 
+        Vector3 controllerGroundNormal;
+
+        void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            controllerGroundNormal = hit.normal;
+        }
+
         void Movement()
         {
+            iPositionNow = transform.localPosition;
+
             bool wasRunning = IsRunning;
 
             // Box cast at our feet to check if we're grounded
             bool groundCheck = Physics.BoxCast(transform.localPosition, Grounded ? groundCheckExtents : airborneGroundCheckExtents, Vector3.down, out groundHit, Quaternion.identity, halfHeight, groundLayerMask, QueryTriggerInteraction.Ignore);
             bool wasGrounded = Grounded;
 
-            // We don't want to set Grounded to true if our y velocity is positive - otherwise we can't jump when running uphill
-            Grounded = (groundCheck || moveController.isGrounded) && fallVelocity.y <= 0f;
+            // Slide down steep slopes
+            bool controllerIsGrounded = moveController.isGrounded;
+            if (groundCheck || controllerIsGrounded)
+            {
+                if (Vector3.Dot(controllerGroundNormal, Vector3.up) < groundUpDirectionThreshold && Vector3.Dot(groundHit.normal, Vector3.up) < groundUpDirectionThreshold)
+                {
+                    controllerIsGrounded = false;
+                    groundCheck = false;
 
+                    fallVelocity.y += Physics.gravity.y * (Sliding ? gravityMultiplier + gravityIncreaseWhileSlidingInAir : gravityMultiplier) * Time.deltaTime;
+                    moveController.Move(Vector3.ProjectOnPlane(Vector3.up, controllerGroundNormal).NormalizedFast() * (fallVelocity.y * Time.deltaTime));
+
+                    controllerGroundNormal = Vector3.up;
+                }
+            }
+
+            // We don't want to set Grounded to true if our y velocity is positive - otherwise we can't jump when running uphill
+            Grounded = (groundCheck || controllerIsGrounded) && fallVelocity.y <= 0f;
+            
             if (Grounded && !wasGrounded)
             {
                 OnEnteredGround?.Invoke();
 
-                if (fallVelocity.y < 0f)
+                if (fallVelocity.y < velocityThresholdForLandEffects)
                 {
                     OnLanded?.Invoke();
 
@@ -872,6 +908,7 @@ Run:
 
             if (Grounded)
             {
+                LastGroundedTime = Time.time;
                 fallVelocity.y = 0f;
 
                 // Handle jump
@@ -892,8 +929,6 @@ Run:
 
             fallVelocity.y += physicsVelocity.y;
             physicsVelocity.y = 0f;
-
-            iPositionNow = transform.localPosition;
 
             // Combine velocities and move
             combinedVelocity = moveVelocity + fallVelocity + externalVelocity + physicsVelocity + connectedRigidbodyVelocity;
@@ -975,7 +1010,7 @@ Run:
 
             if (Sliding)
             {
-                if (Input.Controls.Player.Slide.WasReleasedThisFrame())
+                if (MovementControlLocks == 0 && !Input.Controls.Player.Slide.IsPressed())
                 {
                     EndSlide();
                 }
@@ -1115,6 +1150,9 @@ Run:
             }
 
             currentMoveDirection = Vector3.LerpUnclamped(-wallNormal, transform.forward, 0.5f);
+            currentMoveDirection.y = 0f;
+            fallVelocity.y = 0f;
+
             MovementLocks--;
             OnEndClamber?.Invoke();
         }
@@ -1130,6 +1168,11 @@ Run:
             }
 
             if (moveInput.y == 0f)
+            {
+                return;
+            }
+
+            if (Time.time - LastGroundedTime < minTimeInAirBeforeWallrun)
             {
                 return;
             }
@@ -1276,7 +1319,7 @@ Run:
                 return;
             }
 
-            animator.SetBool(HashGrounded, false);
+            animator.SetInteger(HashGrounded, 0);
             PlayJumpAnimation();
         }
 
@@ -1287,7 +1330,17 @@ Run:
                 return;
             }
 
-            animator.SetBool(HashGrounded, true);
+            animator.SetInteger(HashGrounded, 1);
+        }
+
+        void EnableAnimatorLanded()
+        {
+            if (animator == null)
+            {
+                return;
+            }
+
+            animator.SetInteger(HashGrounded, 2);
         }
 
         void PlayJumpAnimation()
@@ -1493,6 +1546,7 @@ Run:
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.jumpSpeed)));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.speedLostOnJump)));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.speedLostOnLanding)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.velocityThresholdForLandEffects)));
 
                     var enableLandingShock = serializedObject.FindProperty(nameof(script.enableLandingShock));
                     EditorGUILayout.PropertyField(enableLandingShock);
@@ -1525,6 +1579,7 @@ Run:
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.groundLayerMask)));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.groundCheckExtents)));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.airborneGroundCheckExtents)));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.groundUpDirectionThreshold)));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.downwardForceAlongSlope)));
 
                     EditorGUILayout.Space(20);
@@ -1651,6 +1706,7 @@ Run:
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.lookDirectionThresholdToStartWallrun)));
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.targetLookAngleWhileWallrunning)));
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunLookAwayFromWallSpeed)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.minTimeInAirBeforeWallrun)));
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.wallrunWallDisableCooldown)));
 
                         EditorGUI.indentLevel--;

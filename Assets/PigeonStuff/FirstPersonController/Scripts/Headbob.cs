@@ -56,6 +56,7 @@ namespace Pigeon.Movement
         [SerializeField, Tooltip("How the camera moves to its offset when starting a slide")] AnimationCurve startSlidePositionCurve;
         [SerializeField, Tooltip("How the camera moves back to normal when ending a slide")] AnimationCurve endSlidePositionCurve;
         [SerializeField, Tooltip("Camera rotation offset when sliding")] Vector3 slideRotation;
+        [SerializeField, Tooltip("How the camera z rotation changes as its y rotation approaches 90 degrees away from the slide direction")] AnimationCurve slideRotationFromDirectionCurve;
         [SerializeField, Tooltip("How the camera rotates to its offset when starting a slide")] AnimationCurve startSlideRotationCurve;
         [SerializeField, Tooltip("How the camera rotates back to normal when ending a slide")] AnimationCurve endSlideRotationCurve;
         Coroutine slideCoroutine;
@@ -357,8 +358,22 @@ namespace Pigeon.Movement
                     time = 1f;
                 }
 
+                float angleFromDirection = Vector3.SignedAngle(transform.forward, playerMovement.Velocity, Vector3.up);
+                float sign = Mathf.Sign(angleFromDirection);
+                if (angleFromDirection < 0f)
+                {
+                    angleFromDirection = -angleFromDirection;
+                }
+                if (angleFromDirection > 90f)
+                {
+                    angleFromDirection = 90f - (angleFromDirection - 90f);
+                }
+
+                Vector3 rotation = new Vector3(slideRotation.x, slideRotation.y, slideRotation.z *
+                    slideRotationFromDirectionCurve.Evaluate(angleFromDirection / 90f) * sign);
+
                 slideAddPosition = Vector3.LerpUnclamped(initialAddPos, slidePosition, startSlidePositionCurve.Evaluate(time));
-                slideAddRotation = Vector3.LerpUnclamped(initialAddRot, slideRotation, startSlideRotationCurve.Evaluate(time));
+                slideAddRotation = Vector3.LerpUnclamped(initialAddRot, rotation, startSlideRotationCurve.Evaluate(time));
                 playerLook.AddPosition(slideAddPosition);
                 playerLook.AddRotation(slideAddRotation);
 
@@ -367,6 +382,20 @@ namespace Pigeon.Movement
 
             while (true)
             {
+                float angleFromDirection = Vector3.SignedAngle(transform.forward, playerMovement.Velocity, Vector3.up);
+                float sign = Mathf.Sign(angleFromDirection);
+                if (angleFromDirection < 0f)
+                {
+                    angleFromDirection = -angleFromDirection;
+                }
+                if (angleFromDirection > 90f)
+                {
+                    angleFromDirection = 90f - (angleFromDirection - 90f);
+                }
+                
+                slideAddRotation.z = Mathf.Lerp(slideAddRotation.z, slideRotation.z * 
+                    slideRotationFromDirectionCurve.Evaluate(angleFromDirection / 90f) * sign, 7f * Time.deltaTime);
+
                 playerLook.AddPosition(slideAddPosition);
                 playerLook.AddRotation(slideAddRotation);
 
@@ -808,6 +837,7 @@ namespace Pigeon.Movement
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.startSlidePositionCurve)));
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.endSlidePositionCurve)));
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.slideRotation)));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.slideRotationFromDirectionCurve)));
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.startSlideRotationCurve)));
                         EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(script.endSlideRotationCurve)));
 

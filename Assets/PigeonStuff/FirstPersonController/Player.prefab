@@ -112,7 +112,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8604095105704721506}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f75096131dfea11408f1a4fce763102d, type: 3}
+  m_Script: {fileID: 11500000, guid: bcdc93e9f0b168844a56ca81a070b28f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &8604095105704721535
@@ -124,7 +124,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8604095105704721506}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4c6c69525d594448af0d23cefff2303, type: 3}
+  m_Script: {fileID: 11500000, guid: 81b376975decf1e4383ca84d38dee87a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   moveController: {fileID: 8604095105704721528}
@@ -150,6 +150,7 @@ MonoBehaviour:
   jumpSpeed: 6
   speedLostOnJump: 1
   speedLostOnLanding: 1
+  velocityThresholdForLandEffects: -5
   landingShockSpeedThreshold: 100
   speedAccelerationGrounded: 5
   speedAccelerationInAir: 5
@@ -217,6 +218,7 @@ MonoBehaviour:
     m_Bits: 51
   groundCheckExtents: {x: 0.25, y: 0.18, z: 0.25}
   airborneGroundCheckExtents: {x: 0.01, y: 0.18, z: 0.01}
+  groundUpDirectionThreshold: 0.7
   downwardForceAlongSlope: 8
   movingPlatformLayer:
     serializedVersion: 2
@@ -382,6 +384,7 @@ MonoBehaviour:
   lookDirectionThresholdToStartWallrun: 0.75
   targetLookAngleWhileWallrunning: 0.25
   wallrunLookAwayFromWallSpeed: 1
+  minTimeInAirBeforeWallrun: 0.1
   wallrunWallDisableCooldown: 2
 --- !u!143 &8604095105704721528
 CharacterController:
@@ -396,7 +399,7 @@ CharacterController:
   serializedVersion: 2
   m_Height: 2
   m_Radius: 0.5
-  m_SlopeLimit: 45
+  m_SlopeLimit: 47
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
@@ -641,7 +644,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8604095107087443691}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1d4a92d46bf043458875de625783da3, type: 3}
+  m_Script: {fileID: 11500000, guid: 436e7ddb3fd73164398e259fd9a1d540, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playerMovement: {fileID: 8604095105704721535}
@@ -696,7 +699,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8604095107087443691}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8fd481865ac2dd3408e71a39bdc35207, type: 3}
+  m_Script: {fileID: 11500000, guid: d2e7f3242beec9145b6baf6c9c0b5038, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playerMovement: {fileID: 8604095105704721535}
@@ -1207,7 +1210,31 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  slideRotation: {x: -12, y: 0, z: 9}
+  slideRotation: {x: -12, y: 0, z: 10.5}
+  slideRotationFromDirectionCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.8188127
+      outSlope: 0.8188127
+      tangentMode: 0
+      weightedMode: 2
+      inWeight: 0
+      outWeight: 0.07809111
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.005966986
+      outSlope: 0.005966986
+      tangentMode: 0
+      weightedMode: 1
+      inWeight: 0.6628448
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   startSlideRotationCurve:
     serializedVersion: 2
     m_Curve:
@@ -1334,7 +1361,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   rollPosition: {x: 0, y: -0.45, z: 0}
   rollZRotation: 7
-  wallrunAngle: {x: 0, y: 0, z: 23}
+  wallrunAngle: {x: 0, y: 0, z: 19}
   wallrunAngleInitialSpeed: 2
   wallrunAngleInitialCurve:
     serializedVersion: 2
